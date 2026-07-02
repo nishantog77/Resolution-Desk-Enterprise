@@ -1,0 +1,28 @@
+# --- Security & Secrets ---
+.env
+.env.*
+*.env
+
+# --- Vector Database Storage ---
+vector_store/
+chroma/
+*.db
+*.sqlite3
+
+# --- Python Virtual Environments ---
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Python Cache & Bytecode ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db
