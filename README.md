@@ -44,7 +44,7 @@ Resolution Desk operates on a fully decoupled 3-tier microservice architecture.
 
 The most critical component is the **Autonomous Background Worker**. To prevent vector database corruption in distributed environments, the local ChromaDB instance is intentionally excluded from version control. Instead, a lightweight Python daemon wakes up every 15 seconds, queries the Java backend for newly resolved tickets in the Supabase cloud, and dynamically hot-reloads the local neural embeddings.
 
-```mermaid
+~~~mermaid
 graph TD
     subgraph Frontend
         React[React UI Client]
@@ -76,7 +76,7 @@ graph TD
     
     Python <-->|Semantic Search| Chroma
     Python <-->|Prompt Injection| Groq
-```
+~~~
 
 ---
 
@@ -95,7 +95,7 @@ Standard semantic search (dense retrieval) often fails on highly specific IT inf
 
 ## Project Structure
 
-```text
+~~~text
 Resolution-Desk-Enterprise/
 ├── java-backend/               # Spring Boot Application (Port 8080)
 │   ├── src/main/java/          # Business logic, controllers, and JPA repositories
@@ -107,7 +107,7 @@ Resolution-Desk-Enterprise/
 └── react-frontend/             # React Client UI (Port 3000/5173)
     ├── src/                    # Components, views, and state management
     └── package.json            # Node dependencies
-```
+~~~
 
 ---
 
@@ -139,47 +139,47 @@ Resolution-Desk-Enterprise/
 ## Local Installation & Boot Sequence
 
 ### 1. Clone & Configure Environment
-```bash
+~~~bash
 git clone [https://github.com/yourusername/resolution-desk-enterprise.git](https://github.com/yourusername/resolution-desk-enterprise.git)
 cd resolution-desk-enterprise
-```
+~~~
 
 Create a `.env` file in the `python-engine` directory:
-```env
+~~~env
 GROQ_API_KEY="your_groq_api_key_here"
-```
+~~~
 
 Update `java-backend/src/main/resources/application.properties` with your Supabase credentials:
-```properties
+~~~properties
 spring.datasource.url=jdbc:postgresql://[YOUR_SUPABASE_URL]
 spring.datasource.username=postgres
 spring.datasource.password=[YOUR_DB_PASSWORD]
-```
+~~~
 
 ### 2. Boot Terminal 1: Core Backend (Java)
 *Note: Java must boot first to establish the database connection before the Python worker initiates.*
-```bash
+~~~bash
 cd java-backend
 mvn spring-boot:run
-```
+~~~
 
 ### 3. Boot Terminal 2: AI Engine (Python)
 *Note: A virtual environment is strictly required to isolate the machine learning dependencies.*
-```bash
+~~~bash
 cd python-engine
 python -m venv venv
 source venv/bin/activate  # (On Windows use: venv\Scripts\activate)
 pip install -r requirements.txt
 uvicorn main_api:app --reload --port 8000
-```
+~~~
 *Wait for the background thread to print: `Re-indexed successfully.`*
 
 ### 4. Boot Terminal 3: Client UI (React)
-```bash
+~~~bash
 cd react-frontend
 npm install
 npm run dev
-```
+~~~
 
 ---
 
