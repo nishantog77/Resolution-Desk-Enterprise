@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ Resolution Desk
+#  Resolution Desk
 ### Enterprise-Grade AI Case Management & Autonomous Triage System
 
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
@@ -66,7 +66,7 @@ graph TD
 
 ---
 
-## 🧠 The AI Engine: Hybrid RAG & Re-ranking
+##  The AI Engine: Hybrid RAG & Re-ranking
 
 Standard semantic search (dense retrieval) often fails on highly specific IT infrastructure queries — think exact error codes or hardware serials. To solve this, the `/solve` endpoint runs a **hybrid RRF pipeline**:
 
