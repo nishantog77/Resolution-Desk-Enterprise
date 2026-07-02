@@ -1,7 +1,10 @@
+
+
+```markdown
 <div align="center">
 
-#  Resolution Desk
-### Enterprise-Grade AI Case Management & Autonomous Triage System
+# Resolution Desk
+### Enterprise AI Case Management & Autonomous Triage System
 
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -9,26 +12,39 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://supabase.com/)
 [![Groq](https://img.shields.io/badge/Groq-Llama_3_8B-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
 
-*An autonomous, self-learning IT support nervous system featuring Hybrid RAG, real-time vector synchronization, and a decoupled microservice architecture.*
+*An autonomous, self-learning IT support platform featuring Hybrid RAG, real-time vector synchronization, and a decoupled microservice architecture.*
+
+**Watch the System Demo:** *(Insert a link to your demo video or GIF here)*
 
 ---
 </div>
 
-## 📖 Table of Contents
-- [System Architecture](#-system-architecture)
-- [The AI Engine: Hybrid RAG & Re-ranking](#-the-ai-engine-hybrid-rag--re-ranking)
-- [Deployment Modes](#-deployment-modes)
-- [API Reference](#-api-reference)
-- [Local Installation](#-local-installation)
-- [Environment Variables](#-environment-variables)
+## Table of Contents
+- [Core Features](#core-features)
+- [System Architecture](#system-architecture)
+- [Machine Learning Pipeline](#machine-learning-pipeline)
+- [Project Structure](#project-structure)
+- [Deployment Modes](#deployment-modes)
+- [API Reference](#api-reference)
+- [Local Installation & Boot Sequence](#local-installation--boot-sequence)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🏗 System Architecture
+## Core Features
+
+- **Zero-Hallucination AI Triage:** Automatically solves incoming tickets based exclusively on historically verified company data.
+- **Autonomous Database Synchronization:** The AI dynamically learns new resolutions logged by human engineers in real-time without requiring server restarts.
+- **Enterprise Dashboard:** Real-time analytics tracking system layer outages, hardware faults, and team resolution metrics.
+- **Context-Aware Cloud Co-Pilot:** A chat assistant for Level 3 engineers, strictly bound to verified infrastructure runbooks.
+
+---
+
+## System Architecture
 
 Resolution Desk operates on a fully decoupled 3-tier microservice architecture.
 
-The most critical component is the **Autonomous Background Worker**. To prevent vector database corruption in distributed environments, the local ChromaDB instance is intentionally excluded from version control. Instead, a lightweight Python daemon wakes up every 15 seconds, queries the Java backend for newly resolved tickets in the Supabase cloud, and dynamically hot-reloads the local neural embeddings in real time.
+The most critical component is the **Autonomous Background Worker**. To prevent vector database corruption in distributed environments, the local ChromaDB instance is intentionally excluded from version control. Instead, a lightweight Python daemon wakes up every 15 seconds, queries the Java backend for newly resolved tickets in the Supabase cloud, and dynamically hot-reloads the local neural embeddings.
 
 ```mermaid
 graph TD
@@ -47,7 +63,7 @@ graph TD
         Chroma[(Local ChromaDB)]
         BM25[Native BM25 Index]
     end
-
+    
     subgraph Cloud Inference
         Groq[Groq Llama-3-8b API]
     end
@@ -55,38 +71,58 @@ graph TD
     React -->|REST /api/cases| Java
     Java <-->|JPA / Hibernate| DB
     React -->|POST /solve| Python
-
+    
     Worker -->|Fetch RESOLVED tickets every 15s| Java
     Worker -->|Upsert Vectors| Chroma
     Worker -->|Hot-Reload| BM25
-
+    
     Python <-->|Semantic Search| Chroma
     Python <-->|Prompt Injection| Groq
+
 ```
 
 ---
 
-##  The AI Engine: Hybrid RAG & Re-ranking
+## Machine Learning Pipeline
 
-Standard semantic search (dense retrieval) often fails on highly specific IT infrastructure queries — think exact error codes or hardware serials. To solve this, the `/solve` endpoint runs a **hybrid RRF pipeline**:
+Standard semantic search (dense retrieval) often fails on highly specific IT infrastructure queries containing exact error codes or hardware serials. To solve this, the `/solve` endpoint runs a custom **Hybrid RRF Pipeline**:
 
 1. **Sparse Retrieval (Native BM25):** A custom-built BM25 engine tokenizes logs and scores exact-keyword matches (TF-IDF).
 2. **Dense Retrieval (SentenceTransformers):** `all-MiniLM-L6-v2` maps the structural meaning of the customer's query into high-dimensional vector space via ChromaDB.
 3. **Reciprocal Rank Fusion (RRF):** The engine mathematically merges the sparse and dense results to surface candidates that match both exact keywords and overall semantic meaning.
 4. **Cross-Encoder Validation:** Finally, a neural reranker (`ms-marco-MiniLM-L-6-v2`) grades the exact contextual relationship between the query and the historical fix.
 
-> **Safety protocol:** If the cross-encoder score falls below `1.0`, the system aborts auto-resolution and raises `FLAG_FOR_REVIEW` instead of risking a hallucinated fix.
+**Safety Protocol:** If the cross-encoder score falls below `1.0`, the system aborts auto-resolution and raises `FLAG_FOR_REVIEW` to prevent hallucinated fixes on production servers.
 
 ---
 
-## 🔌 Deployment Modes
+## Project Structure
 
-- **Mode A — Full Stack Application:** Run the React UI alongside both backends for a complete, out-of-the-box ticketing dashboard for IT operations teams.
-- **Mode B — Headless AI Microservice:** Because the FastAPI engine runs independently, teams already on Jira, Zendesk, or ServiceNow can route their webhooks straight to `/solve` and get AI triage without adopting the full stack.
+```text
+Resolution-Desk-Enterprise/
+├── java-backend/               # Spring Boot Application (Port 8080)
+│   ├── src/main/java/          # Business logic, controllers, and JPA repositories
+│   └── src/main/resources/     # application.properties (DB configurations)
+├── python-engine/              # FastAPI Microservice (Port 8000)
+│   ├── main_api.py             # Hybrid RAG Engine and Background Worker
+│   ├── requirements.txt        # Python dependencies
+│   └── .env                    # Cloud inference API keys (Git-ignored)
+└── react-frontend/             # React Client UI (Port 3000/5173)
+    ├── src/                    # Components, views, and state management
+    └── package.json            # Node dependencies
+
+```
 
 ---
 
-## 📡 API Reference
+## Deployment Modes
+
+* **Full Stack Application:** Run the React UI alongside both backends to provide a complete, out-of-the-box ticketing dashboard for IT operations teams.
+* **Headless AI Microservice:** Because the FastAPI engine runs independently, enterprises already using Jira, Zendesk, or ServiceNow can route their webhooks directly to the `/solve` endpoint to inject advanced AI triage into their existing infrastructure.
+
+---
+
+## API Reference
 
 ### Core Operations (Spring Boot — Port 8080)
 
@@ -106,72 +142,65 @@ Standard semantic search (dense retrieval) often fails on highly specific IT inf
 
 ---
 
-## 🛠 Local Installation
+## Local Installation & Boot Sequence
 
-### 1. Clone the repo
+### 1. Clone & Configure Environment
 
 ```bash
-git clone https://github.com/yourusername/ai-resolution-desk.git
-cd ai-resolution-desk
-```
+git clone [https://github.com/yourusername/resolution-desk-enterprise.git](https://github.com/yourusername/resolution-desk-enterprise.git)
+cd resolution-desk-enterprise
 
-### 2. Configure environment
+```
 
 Create a `.env` file in the `python-engine` directory:
 
 ```env
 GROQ_API_KEY="your_groq_api_key_here"
+
 ```
 
-Update `java-backend/src/main/resources/application.properties`:
+Update `java-backend/src/main/resources/application.properties` with your Supabase credentials:
 
 ```properties
 spring.datasource.url=jdbc:postgresql://[YOUR_SUPABASE_URL]
 spring.datasource.username=postgres
 spring.datasource.password=[YOUR_DB_PASSWORD]
+
 ```
 
-### 3. Initialize the microservices
+### 2. Boot Terminal 1: Core Backend (Java)
 
-**Terminal 1 — AI Engine:**
-
-```bash
-cd python-engine
-pip install -r requirements.txt
-uvicorn main_api:app --reload --port 8000
-```
-
-Wait for the background thread to print `Re-indexed successfully.`
-
-**Terminal 2 — Core Backend:**
+*Note: Java must boot first to establish the database connection before the Python worker initiates.*
 
 ```bash
 cd java-backend
 mvn spring-boot:run
+
 ```
 
-**Terminal 3 — Client UI:**
+### 3. Boot Terminal 2: AI Engine (Python)
+
+*Note: A virtual environment is strictly required to isolate the machine learning dependencies.*
+
+```bash
+cd python-engine
+python -m venv venv
+source venv/bin/activate  # (On Windows use: venv\Scripts\activate)
+pip install -r requirements.txt
+uvicorn main_api:app --reload --port 8000
+
+```
+
+*Wait for the background thread to print: `Re-indexed successfully.*`
+
+### 4. Boot Terminal 3: Client UI (React)
 
 ```bash
 cd react-frontend
 npm install
 npm run dev
+
 ```
 
 ---
 
-## 🔑 Environment Variables
-
-| Variable | Location | Required | Description |
-| --- | --- | --- | --- |
-| `GROQ_API_KEY` | `python-engine/.env` | ✅ | Auth key for Groq's Llama 3 8B inference API. Never commit this file. |
-| `spring.datasource.url` | `application.properties` | ✅ | Supabase Postgres connection string. |
-| `spring.datasource.username` / `password` | `application.properties` | ✅ | Supabase DB credentials. |
-
----
-
-<div align="center">
-
-Built with ❤️ for IT teams tired of solving the same ticket twice.
-
-</div>
