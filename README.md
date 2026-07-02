@@ -13,9 +13,8 @@
 
 **Watch the System Demo:** *(Insert a link to your demo video or GIF here)*
 
-</div>
-
 ---
+</div>
 
 ## Table of Contents
 - [Core Features](#core-features)
