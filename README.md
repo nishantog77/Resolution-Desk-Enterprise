@@ -75,3 +75,31 @@ graph TD
     
     Python <-->|Semantic Search| Chroma
     Python <-->|Prompt Injection| Groq
+
+Machine Learning PipelineStandard semantic search (dense retrieval) often fails on highly specific IT infrastructure queries containing exact error codes or hardware serials. To solve this, the /solve endpoint runs a custom Hybrid RRF Pipeline:Sparse Retrieval (Native BM25): A custom-built BM25 engine tokenizes logs and scores exact-keyword matches (TF-IDF).Dense Retrieval (SentenceTransformers): all-MiniLM-L6-v2 maps the structural meaning of the customer's query into high-dimensional vector space via ChromaDB.Reciprocal Rank Fusion (RRF): The engine mathematically merges the sparse and dense results to surface candidates that match both exact keywords and overall semantic meaning.Cross-Encoder Validation: Finally, a neural reranker (ms-marco-MiniLM-L-6-v2) grades the exact contextual relationship between the query and the historical fix.Safety Protocol: If the cross-encoder score falls below 1.0, the system aborts auto-resolution and raises FLAG_FOR_REVIEW to prevent hallucinated fixes on production servers.Project StructurePlaintextResolution-Desk-Enterprise/
+├── java-backend/               # Spring Boot Application (Port 8080)
+│   ├── src/main/java/          # Business logic, controllers, and JPA repositories
+│   └── src/main/resources/     # application.properties (DB configurations)
+├── python-engine/              # FastAPI Microservice (Port 8000)
+│   ├── main_api.py             # Hybrid RAG Engine and Background Worker
+│   ├── requirements.txt        # Python dependencies
+│   └── .env                    # Cloud inference API keys (Git-ignored)
+└── react-frontend/             # React Client UI (Port 3000/5173)
+    ├── src/                    # Components, views, and state management
+    └── package.json            # Node dependencies
+Deployment ModesFull Stack Application: Run the React UI alongside both backends to provide a complete, out-of-the-box ticketing dashboard for IT operations teams.Headless AI Microservice: Because the FastAPI engine runs independently, enterprises already using Jira, Zendesk, or ServiceNow can route their webhooks directly to the /solve endpoint to inject advanced AI triage into their existing infrastructure.API ReferenceCore Operations (Spring Boot — Port 8080)EndpointMethodDescription/api/casesGETFetch all cases. Accepts ?status= and ?category= filters./api/casesPOSTLog a new case. Auto-generates a CASE-YYYY-XXXXX ID./api/cases/{id}PATCHUpdate ticket status or resolution notes.AI Inference (FastAPI — Port 8000)EndpointMethodDescription/solvePOSTAccepts a ticket description and returns a RAG-verified resolution, or flags it for human review./chatPOSTInteractive co-pilot restricted to verified historical runbook data./pingGETHealth check for the AI microservice.Local Installation & Boot Sequence1. Clone & Configure EnvironmentBashgit clone [https://github.com/yourusername/resolution-desk-enterprise.git](https://github.com/yourusername/resolution-desk-enterprise.git)
+cd resolution-desk-enterprise
+Create a .env file in the python-engine directory:Code snippetGROQ_API_KEY="your_groq_api_key_here"
+Update java-backend/src/main/resources/application.properties with your Supabase credentials:Propertiesspring.datasource.url=jdbc:postgresql://[YOUR_SUPABASE_URL]
+spring.datasource.username=postgres
+spring.datasource.password=[YOUR_DB_PASSWORD]
+2. Boot Terminal 1: Core Backend (Java)Note: Java must boot first to establish the database connection before the Python worker initiates.Bashcd java-backend
+mvn spring-boot:run
+3. Boot Terminal 2: AI Engine (Python)Note: A virtual environment is strictly required to isolate the machine learning dependencies.Bashcd python-engine
+python -m venv venv
+source venv/bin/activate  # (On Windows use: venv\Scripts\activate)
+pip install -r requirements.txt
+uvicorn main_api:app --reload --port 8000
+Wait for the background thread to print: Re-indexed successfully.4. Boot Terminal 3: Client UI (React)Bashcd react-frontend
+npm install
+npm run dev
