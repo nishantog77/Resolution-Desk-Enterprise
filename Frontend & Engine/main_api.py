@@ -61,7 +61,7 @@ neural_reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
 persist_directory = os.path.join(os.getcwd(), "vector_store")
 chroma_client = chromadb.PersistentClient(path=persist_directory)
-collection = chroma_client.get_collection(name="telecom_cases")
+collection = chroma_client.get_or_create_collection(name="telecom_cases")
 
 all_records = collection.get()
 sparse_engine = NativeBM25Engine(

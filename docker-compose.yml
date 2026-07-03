@@ -1,0 +1,39 @@
+
+services:
+  core-backend:
+    build: ./java-backend/casemanagement
+    container_name: resolution_java_api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env  # This forces Docker to swallow your Master .env file
+    
+
+  ai-engine:
+    # UPDATED: Points directly to the Frontend & Engine folder where main_api.py lives
+    build: "./Frontend & Engine" 
+    container_name: resolution_python_ai
+    ports:
+      - "8000:8000"
+    env_file:
+      # UPDATED: Points to the .env file sitting right next to main_api.py
+      - "./Frontend & Engine/.env"
+    depends_on:
+      - core-backend
+    networks:
+      - resolution_network
+
+  frontend:
+    build: "./Frontend & Engine/frontend"
+    container_name: resolution_react_ui
+    ports:
+      - "3000:80" 
+    depends_on:
+      - core-backend
+      - ai-engine
+    networks:
+      - resolution_network
+
+networks:
+  resolution_network:
+    driver: bridge

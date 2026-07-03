@@ -8,6 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://supabase.com/)
 [![Groq](https://img.shields.io/badge/Groq-Llama_3_8B-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 *An autonomous, self-learning IT support platform featuring Hybrid RAG, real-time vector synchronization, and a decoupled microservice architecture.*
 
@@ -24,7 +25,7 @@
 - [Enterprise Security & Privacy](#enterprise-security--privacy)
 - [Project Structure](#project-structure)
 - [API Reference](#api-reference)
-- [Local Installation & Boot Sequence](#local-installation--boot-sequence)
+- [Docker Deployment & Quick Start](#docker-deployment--quick-start)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Development Roadmap](#development-roadmap)
 - [Troubleshooting](#troubleshooting)
@@ -49,7 +50,7 @@ The most critical component is the **Autonomous Background Worker**. To prevent 
 ```mermaid
 graph TD
     subgraph Frontend
-        React[React UI Client]
+        React[React UI Client - Nginx]
     end
 
     subgraph Core Backend
@@ -101,6 +102,7 @@ Resolution Desk is engineered with corporate data privacy as a primary directive
 - **Zero-Retention Inference:** The Groq Cloud LLM API is utilized exclusively as a stateless inference engine. No proprietary IT infrastructure data is used to train downstream models.
 - **On-Premise Vectorization:** The ChromaDB vector store and sentence-transformer embeddings run 100% locally on the host machine. 
 - **Role-Based Access Preparation:** The Supabase PostgreSQL schema is structured to support Row Level Security (RLS) for future multi-tenant deployments.
+- **Environment Isolation:** All sensitive credentials are injected dynamically at runtime via Docker, ensuring zero hardcoded secrets.
 
 ---
 
@@ -108,16 +110,15 @@ Resolution Desk is engineered with corporate data privacy as a primary directive
 
 ```text
 Resolution-Desk-Enterprise/
-├── java-backend/               # Spring Boot Application (Port 8080)
-│   ├── src/main/java/          # Business logic, controllers, and JPA repositories
-│   └── src/main/resources/     # application.properties (DB configurations)
-├── python-engine/              # FastAPI Microservice (Port 8000)
-│   ├── main_api.py             # Hybrid RAG Engine and Background Worker
-│   ├── requirements.txt        # Python dependencies
-│   └── .env                    # Cloud inference API keys (Git-ignored)
-└── react-frontend/             # React Client UI (Port 3000/5173)
-    ├── src/                    # Components, views, and state management
-    └── package.json            # Node dependencies
+├── Frontend & Engine/          
+│   ├── frontend/               # React UI (Vite + Nginx, Port 3000)
+│   ├── main_api.py             # FastAPI Hybrid RAG Engine and Background Worker (Port 8000)
+│   ├── requirements.txt        # Python AI dependencies
+│   └── .dockerignore           # Build cache protection
+├── java-backend/               
+│   └── casemanagement/         # Spring Boot API (Java 17, Port 8080)
+├── docker-compose.yml          # Master Container Orchestrator
+└── .env                        # Master Environment Secrets (Git-ignored)
 ```
 
 ---
@@ -140,12 +141,12 @@ Resolution-Desk-Enterprise/
 
 ---
 
-## Local Installation & Boot Sequence
+## Docker Deployment & Quick Start
+
+Resolution Desk is fully containerized. You do not need to install Java, Python, or Node locally to run this application.
 
 ### Prerequisites
-- Node.js v18+
-- Python 3.10+
-- Java 17+ & Maven 3.8+
+- Docker Desktop installed and running.
 
 ### 1. Clone & Configure Environment
 ```bash
@@ -153,42 +154,26 @@ git clone https://github.com/yourusername/resolution-desk-enterprise.git
 cd resolution-desk-enterprise
 ```
 
-Create a `.env` file in the `python-engine` directory:
+Create a master `.env` file in the root directory:
 ```env
-GROQ_API_KEY="your_groq_api_key_here"
+SPRING_DATASOURCE_URL=jdbc:postgresql://[YOUR_SUPABASE_URL]:5432/postgres
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=[YOUR_DB_PASSWORD]
+GROQ_API_KEY=[YOUR_GROQ_API_KEY_HERE]
 ```
 
-Update `java-backend/src/main/resources/application.properties` with your Supabase credentials:
-```properties
-spring.datasource.url=jdbc:postgresql://[YOUR_SUPABASE_URL]
-spring.datasource.username=postgres
-spring.datasource.password=[YOUR_DB_PASSWORD]
-```
+### 2. Boot the Entire Stack
+Run this single command from the root directory to download dependencies, compile the Java/React code, and boot the private network:
 
-### 2. Boot Terminal 1: Core Backend (Java)
-*Note: Java must boot first to establish the database connection before the Python worker initiates.*
 ```bash
-cd java-backend
-mvn spring-boot:run
+docker-compose up --build
 ```
 
-### 3. Boot Terminal 2: AI Engine (Python)
-*Note: A virtual environment is strictly required to isolate the machine learning dependencies.*
-```bash
-cd python-engine
-python -m venv venv
-source venv/bin/activate  # (On Windows use: venv\Scripts\activate)
-pip install -r requirements.txt
-uvicorn main_api:app --reload --port 8000
-```
-*Wait for the background thread to print: `Re-indexed successfully.`*
-
-### 4. Boot Terminal 3: Client UI (React)
-```bash
-cd react-frontend
-npm install
-npm run dev
-```
+### 3. Access the Services
+Once the terminal logs verify the services are running, access them here:
+- **Client UI (React/Nginx):** `http://localhost:3000`
+- **Core API (Java):** `http://localhost:8080`
+- **AI Engine (Python):** `http://localhost:8000`
 
 ---
 
@@ -205,17 +190,17 @@ npm run dev
 ## Development Roadmap
 
 - **Phase 1 (Completed):** Core Microservices, Hybrid RAG, Autonomous Synchronization.
-- **Phase 2 (Upcoming):** Slack/Microsoft Teams webhook integrations for immediate alert triage.
-- **Phase 3 (Upcoming):** JWT Authentication and Role-Based Access Control (RBAC) for Level 1 vs Level 3 engineers.
-- **Phase 4 (Upcoming):** Docker Compose implementation for 1-click containerized deployment.
+- **Phase 2 (Completed):** Docker Compose implementation for 1-click containerized deployment.
+- **Phase 3 (Upcoming):** Slack/Microsoft Teams webhook integrations for immediate alert triage.
+- **Phase 4 (Upcoming):** JWT Authentication and Role-Based Access Control (RBAC) for Level 1 vs Level 3 engineers.
 
 ---
 
 ## Troubleshooting
 
-- **Vector Database Errors on Boot:** If ChromaDB throws persistent SQLite errors, delete the `vector_store` directory inside `python-engine`. The autonomous loop will rebuild it from the cloud database automatically on the next boot.
-- **Port Conflicts:** Ensure ports `8000` (FastAPI), `8080` (Spring Boot), and `3000/5173` (React) are free. Use `kill -9 <PID>` on Unix systems or Task Manager on Windows to terminate stalled processes.
-- **Missing API Keys:** If the Python engine throws an inference error, verify your `.env` file is properly formatted and the `python-dotenv` package is installed.
+- **Vector Database Errors on Boot:** If ChromaDB throws persistent SQLite errors, delete the `vector_store` directory inside `Frontend & Engine`. The autonomous loop will rebuild it from the cloud database automatically on the next boot.
+- **Docker API Connection Error:** If Docker throws a `failed to connect to the docker API` error, ensure Docker Desktop is fully open and the engine icon is green before running `docker-compose up`.
+- **Port Conflicts:** Ensure ports `8000` (FastAPI), `8080` (Spring Boot), and `3000` (React) are free. Use `kill -9 <PID>` on Unix systems or Task Manager on Windows to terminate stalled processes.
 
 <div align="center">
 
