@@ -40,6 +40,23 @@
 - **Context-Aware Cloud Co-Pilot:** A chat assistant for Level 3 engineers, strictly bound to verified infrastructure runbooks via Reciprocal Rank Fusion (RRF).
 
 ---
+---
+
+## System Gallery
+
+Here is a look at the Enterprise UI and the AI Co-Pilot in action.
+
+### Main Operations Dashboard
+*(React frontend fetching real-time case data from the Spring Boot API)*
+![Resolution Desk Dashboard](./docs/assets/dashboard.png)
+
+### Autonomous AI Triage
+*(The Python microservice executing a Hybrid-RAG search and generating a resolution via Groq)*
+![AI Auto-Resolution](./docs/assets/ticket.png)
+
+
+
+---
 
 ## System Architecture
 
