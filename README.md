@@ -12,8 +12,6 @@
 
 *An autonomous, self-learning IT support platform featuring Hybrid RAG, real-time vector synchronization, and a decoupled microservice architecture.*
 
-**Watch the System Demo:** *(Insert a link to your demo video or GIF here)*
-
 </div>
 
 ---
