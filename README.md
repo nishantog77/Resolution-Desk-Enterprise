@@ -52,7 +52,7 @@ Here is a look at the Enterprise UI and the AI Co-Pilot in action.
 
 ### Autonomous AI Triage
 *(The Python microservice executing a Hybrid-RAG search and generating a resolution via Groq)*
-![AI Auto-Resolution](./docs/assets/ticket.png)
+![AI Auto-Resolution](./docs/assets/Ticket.png)
 
 
 
