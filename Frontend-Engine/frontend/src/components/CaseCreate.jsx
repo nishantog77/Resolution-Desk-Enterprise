@@ -17,27 +17,37 @@ const CaseCreate = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // This watches the description box.
-  
   useEffect(() => {
     if (formData.description.length < 20) return;
 
     const delayDebounceFn = setTimeout(async () => {
       setIsTyping(true);
       try {
-        const aiRequest = {
-          description: formData.description,
-          category: formData.category || 'NETWORK',
-          device: formData.device || 'Unknown'
-        };
+        // THE FIX: Bypassing Java and directly hitting the Python AI Microservice
+        const response = await fetch('http://localhost:8000/solve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            description: formData.description,
+            category: formData.category || 'NETWORK',
+            device: formData.device || 'Unknown'
+          })
+        });
 
-        const response = await api.post('/cases/recommend', aiRequest);
-        setAiSuggestion(response.data);
+        if (!response.ok) {
+          throw new Error(`Python Engine Error: ${response.status}`);
+        }
 
-        if (response.data.system_layer && response.data.system_layer !== 'N/A') {
+        const data = await response.json();
+        setAiSuggestion(data);
+
+        if (data.system_layer && data.system_layer !== 'N/A') {
           setFormData(prev => ({
             ...prev,
-            category: response.data.system_layer,
-            severity: response.data.severity !== 'N/A' ? response.data.severity : 'P3'
+            category: data.system_layer,
+            severity: data.severity !== 'N/A' ? data.severity : 'P3'
           }));
         }
       } catch (error) {
@@ -207,12 +217,12 @@ const CaseCreate = () => {
 
               <div>
                 <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Recommended Runbook</h4>
-                <div className="tech-box text-xs">{aiSuggestion.suggested_resolution}</div>
+                <div className="tech-box text-xs whitespace-pre-wrap">{aiSuggestion.suggested_resolution}</div>
               </div>
 
               <div>
                 <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Similar Historical Ticket</h4>
-                <div className="tech-box muted text-xs">
+                <div className="tech-box muted text-xs whitespace-pre-wrap">
                   <strong>ID:</strong> {aiSuggestion.ticket_id}<br />
                   {aiSuggestion.matched_historical_ticket}
                 </div>

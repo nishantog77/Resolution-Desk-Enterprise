@@ -44,7 +44,7 @@ const CaseDetail = ({ caseId, onBack }) => {
         headers: { 'Content-Type': 'text/plain' }
       });
       setTicket(prev => ({ ...prev, resolutionNotes: newNote }));
-      alert(" Resolution notes permanently saved to the cloud database!");
+      alert("Resolution notes permanently saved to the cloud database!");
     } catch (err) {
       console.error("Failed to save notes", err);
       alert("Failed to save. Check your Java backend console.");
@@ -64,8 +64,9 @@ const CaseDetail = ({ caseId, onBack }) => {
 
     try {
       const payload = {
-        ticket_id: String(ticket?.caseId || "UNKNOWN"),
-        ticket_context: String(ticket?.description || "No description provided."),
+        // Safe fallbacks to prevent crashes
+        ticket_id: String(ticket?.caseId || ticket?.id || "UNKNOWN"),
+        ticket_context: String(ticket?.description || ticket?.customerQuery || "No description provided."),
         category: String(ticket?.category || "GENERAL"),
         message: String(userMessage)
       };
@@ -121,9 +122,11 @@ const CaseDetail = ({ caseId, onBack }) => {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-white/[0.06] pb-5">
         <header>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{ticket.title || `Support Ticket ${ticket.caseId}`}</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            {ticket.title || `Support Ticket ${ticket.caseId || ticket.id}`}
+          </h1>
           <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-500">
-            <span className="rounded-md bg-white/[0.04] px-2 py-1 border border-white/[0.06]">ID: {ticket.caseId}</span>
+            <span className="rounded-md bg-white/[0.04] px-2 py-1 border border-white/[0.06]">ID: {ticket.caseId || ticket.id}</span>
             <span className="rounded-md bg-white/[0.04] px-2 py-1 border border-white/[0.06]">Category: {ticket.category}</span>
             <span className="rounded-md bg-white/[0.04] px-2 py-1 border border-white/[0.06]">Device: {ticket.device}</span>
           </div>
@@ -185,7 +188,7 @@ const CaseDetail = ({ caseId, onBack }) => {
                   <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full mt-0.5 ${msg.role === 'user' ? 'bg-sky-500/20 text-sky-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
                     {msg.role === 'user' ? <User size={10} /> : <Bot size={10} />}
                   </div>
-                  <div className={`rounded-xl px-3 py-2.5 text-xs leading-relaxed ${
+                  <div className={`rounded-xl px-3 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
                       ? 'bg-sky-500/[0.08] border border-sky-500/20 text-sky-100 rounded-tr-sm'
                       : 'bg-black/35 border border-white/[0.05] text-slate-300 rounded-tl-sm font-mono'

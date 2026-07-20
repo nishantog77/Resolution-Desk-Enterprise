@@ -13,14 +13,14 @@ import java.util.List;
 
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
-    // ... leave the rest of the code exactly as it is ...
+    
 
     @Autowired
     private CaseRepository caseRepository;
 
     @Override
     public void run(String... args) throws Exception {
-        // Only seed if the Supabase table is completely empty
+        
         if (caseRepository.count() == 0) {
             System.out.println("🗄️ Supabase is empty. Seeding historical JSON data to the cloud...");
 
@@ -32,9 +32,9 @@ public class DatabaseSeeder implements CommandLineRunner {
             List<Case> cases = mapper.readValue(inputStream, typeReference);
 
             caseRepository.saveAll(cases); // Mass insert into PostgreSQL
-            System.out.println("✅ Data seeding complete! All records safely saved in Supabase.");
+            System.out.println(" Data seeding complete! All records safely saved in Supabase.");
         } else {
-            System.out.println("📋 Database already contains records. Skipping auto-seeding.");
+            System.out.println(" Database already contains records. Skipping auto-seeding.");
         }
     }
 }

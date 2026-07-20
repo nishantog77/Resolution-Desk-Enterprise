@@ -10,6 +10,7 @@ import requests
 import threading
 import time
 from dotenv import load_dotenv
+from typing import Optional, Any
 
 # Load environment variables from .env file
 load_dotenv()
@@ -88,7 +89,7 @@ def auto_sync_knowledge_base():
         time.sleep(15) #Every 15 seconds, check for new tickets
         try:
             # Python queries Java backend for resolved tickets
-            response = requests.get("http://localhost:8080/api/cases?status=RESOLVED", timeout=5)
+            response = requests.get("http://core-backend:8080/api/cases?status=RESOLVED", timeout=5)
             
             if response.status_code == 200:
                 resolved_cases = response.json()
@@ -148,11 +149,14 @@ def startup_event():
     thread = threading.Thread(target=auto_sync_knowledge_base, daemon=True)
     thread.start()
 
-# --- 3. PAYLOAD MODELS ---
+
 class QueryRequest(BaseModel):
-    description: str
-    category: str = ""
-    device: str = ""
+    # Optional tags catch whatever variable name React decides to send
+    description: Optional[str] = ""
+    query: Optional[str] = ""
+    customerQuery: Optional[str] = ""
+    category: Optional[str] = ""
+    device: Optional[str] = ""
 
 class ChatPayload(BaseModel):
     ticket_id: str
@@ -168,7 +172,12 @@ def ping():
 @app.post("/solve")
 def solve_ticket(request: QueryRequest):
     try:
-        q_text = f"{request.description} {request.device}"
+        # Extract the text safely regardless of what the frontend named the variable
+        raw_text = request.description or request.query or request.customerQuery or ""
+        q_text = f"{raw_text} {request.device}".strip()
+
+        if not q_text:
+             return {"action": "FLAG_FOR_REVIEW", "message": "No query provided."}
 
         sparse_top_ids = sparse_engine.search(q_text, top_n=10)
         query_vector = dense_model.encode(q_text).tolist()
@@ -211,13 +220,16 @@ def solve_ticket(request: QueryRequest):
             resolutions_list.append(f"{i+1}. {meta.get('technical_resolution', 'No resolution')}")
             histories_list.append(f"{i+1}. [{meta.get('ticket_id', 'UNKNOWN')}] {meta.get('customer_query', '')}")
 
+        # Enhanced return payload to guarantee a match with the React UI
         return {
             "action": "AUTO_RESOLVE" if final_score > 1.0 else "FLAG_FOR_REVIEW",
             "ml_confidence_metric": round(final_score, 4),
+            "confidence_score": round(final_score, 4),
             "ticket_id": winning_metadata.get('ticket_id', 'UNKNOWN'),
             "environment": winning_metadata.get('environment', 'N/A'),
             "severity": winning_metadata.get('severity_level', 'N/A'),
             "system_layer": winning_metadata.get('system_layer', 'N/A'),
+            "category": winning_metadata.get('system_layer', 'N/A'),
             "error_code": "N/A",
             "failure_log": "N/A",
             "matched_historical_ticket": "\n\n".join(histories_list),
@@ -231,7 +243,7 @@ def solve_ticket(request: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 #  CLOUD AI CO-PILOT 
-# Securely pulls the key from your .env file
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     print("⚠️ WARNING: GROQ_API_KEY is missing! Make sure your .env file is set up correctly.")

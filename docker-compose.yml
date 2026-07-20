@@ -1,4 +1,3 @@
-
 services:
   core-backend:
     build: ./java-backend/casemanagement
@@ -6,25 +5,27 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env  # This forces Docker to swallow your Master .env file
-    
+      - .env  
+    networks:
+      - resolution_network
 
   ai-engine:
-    # UPDATED: Points directly to the Frontend & Engine folder where main_api.py lives
-    build: "./Frontend & Engine" 
+    build: ./Frontend-Engine
     container_name: resolution_python_ai
     ports:
       - "8000:8000"
     env_file:
-      # UPDATED: Points to the .env file sitting right next to main_api.py
-      - "./Frontend & Engine/.env"
+      - .env  
+    environment:
+      
+      - HF_HUB_DOWNLOAD_TIMEOUT=120
     depends_on:
       - core-backend
     networks:
       - resolution_network
 
   frontend:
-    build: "./Frontend & Engine/frontend"
+    build: ./Frontend-Engine/frontend
     container_name: resolution_react_ui
     ports:
       - "3000:80" 

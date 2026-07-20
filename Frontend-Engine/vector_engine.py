@@ -5,7 +5,7 @@ from tqdm import tqdm
 import os
 import shutil
 
-print("🚀 Initializing Telecom AI Vector Engine...")
+print(" Initializing Telecom AI Vector Engine...")
 
 persist_directory = os.path.join(os.getcwd(), "vector_store")
 if os.path.exists(persist_directory):
@@ -23,7 +23,7 @@ def build_database():
     with open(json_path, "r", encoding="utf-8") as f:
         cases = json.load(f)
 
-    print(f"📖 Loaded {len(cases)} telecom cases. Vectorizing into high-dimensional space...")
+    print(f"Loaded {len(cases)} telecom cases. Vectorizing into high-dimensional space...")
 
     ids = []
     documents = []
@@ -37,7 +37,7 @@ def build_database():
         category = str(case.get("category") or "UNKNOWN")
         device = str(case.get("device") or "UNKNOWN")
         
-        # Safely grab the resolution text even if the AI generated a null object
+        
         resolution = case.get("resolution")
         if not isinstance(resolution, dict):
             resolution = {}
@@ -49,7 +49,7 @@ def build_database():
         ids.append(case_id)
         documents.append(search_context)
         
-        # CHROMA DB FIX: Every single value is now guaranteed to be a string
+        
         metadatas.append({
             "ticket_id": case_id,
             "system_layer": category,
@@ -68,7 +68,7 @@ def build_database():
         documents=documents
     )
 
-    print("\n🎉 BOOM. Telecom Vector Database compiled and synced to disk.")
+    print("\n Telecom Vector Database compiled and synced to disk.")
 
 if __name__ == "__main__":
     build_database()

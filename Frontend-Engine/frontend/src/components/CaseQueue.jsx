@@ -9,7 +9,6 @@ const CaseQueue = ({ onRowClick }) => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  
   useEffect(() => {
     fetchCases();
   }, [categoryFilter, statusFilter]);
@@ -17,12 +16,17 @@ const CaseQueue = ({ onRowClick }) => {
   const fetchCases = async () => {
     setLoading(true);
     try {
-      let url = '/cases?';
-      if (categoryFilter) url += `category=${categoryFilter}&`;
-      if (statusFilter) url += `status=${statusFilter}`;
+      // THE FIX: Safe URL Query Parameter Building
+      let url = '/cases';
+      const queryParts = [];
+      if (categoryFilter) queryParts.push(`category=${categoryFilter}`);
+      if (statusFilter) queryParts.push(`status=${statusFilter}`);
+      
+      if (queryParts.length > 0) {
+        url += `?${queryParts.join('&')}`;
+      }
 
       const response = await api.get(url);
-      
       
       const sorted = [...response.data].sort((a, b) => {
         const idA = a.id || a.caseId || "";
@@ -41,7 +45,7 @@ const CaseQueue = ({ onRowClick }) => {
   const exportToCSV = () => {
     const headers = ["Ticket ID", "Status", "Severity", "Category", "Device", "Description"];
     const rows = cases.map(c => [
-      c.id || c.caseId || "N/A", //  Fallback for ID in CSV
+      c.id || c.caseId || "N/A", // Fallback for ID in CSV
       c.status || "N/A",
       c.severity || "N/A",
       c.category || "N/A",
@@ -129,7 +133,7 @@ const CaseQueue = ({ onRowClick }) => {
               <tbody className="divide-y divide-white/[0.03]">
                 {cases.map((ticket, index) => (
                   <tr
-                    key={ticket.id || ticket.caseId || index} //  Safe map key
+                    key={ticket.id || ticket.caseId || index} // Safe map key
                     onClick={() => onRowClick(ticket.id || ticket.caseId)}
                     className="group cursor-pointer transition-colors duration-150 hover:bg-sky-500/[0.04] border-l-2 border-l-transparent hover:border-l-sky-500/40"
                   >
@@ -138,7 +142,7 @@ const CaseQueue = ({ onRowClick }) => {
                       {ticket.id || ticket.caseId || "N/A"}
                     </td>
                     
-                    {/*  Safely handle toLowerCase so it never crashes on null fields */}
+                    {/* Safely handle toLowerCase so it never crashes on null fields */}
                     <td className="px-5 py-3.5">
                       <span className={`status-badge ${ticket.status?.toLowerCase() || ''}`}>{ticket.status || "Open"}</span>
                     </td>

@@ -15,8 +15,21 @@ const AiDiagnostics = () => {
     setResult(null);
 
     try {
-      const response = await api.post('/cases/recommend', formData);
-      setResult(response.data);
+      // THE FIX: Route the AI Diagnosis directly to the Python Microservice on port 8000
+      const response = await fetch('http://localhost:8000/solve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Python Engine Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResult(data);
     } catch (err) {
       setError('Connection to analysis engine failed. Verify backend services are active.');
       console.error(err);
@@ -130,12 +143,12 @@ const AiDiagnostics = () => {
 
               <div>
                 <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Suggested Remediation</h4>
-                <div className="terminal-block text-xs">{result.suggested_resolution}</div>
+                <div className="terminal-block text-xs whitespace-pre-wrap">{result.suggested_resolution}</div>
               </div>
 
               <div>
                 <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Historical Case Matches</h4>
-                <div className="terminal-block muted text-xs">
+                <div className="terminal-block muted text-xs whitespace-pre-wrap">
                   <strong>Ticket:</strong> {result.ticket_id}<br />
                   <strong>Context:</strong> {result.matched_historical_ticket}
                 </div>
