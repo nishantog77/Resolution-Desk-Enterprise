@@ -17,7 +17,7 @@ public class AIGatewayService {
             // Forward the payload to the Python engine
             return restTemplate.postForObject(PYTHON_AI_URL, request, AIRecommendResponse.class);
         } catch (Exception e) {
-            // Day 13 requirement: Provide a graceful fallback if the Python AI service is offline
+            
             AIRecommendResponse fallback = new AIRecommendResponse();
             fallback.setAction("FLAG_FOR_REVIEW");
             fallback.setMessage("AI Microservice connection timeout. Falling back to default triage pipeline.");

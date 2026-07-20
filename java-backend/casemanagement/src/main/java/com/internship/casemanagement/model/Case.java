@@ -16,7 +16,7 @@ public class Case {
 
     private String category;
 
-    // THE FIX: Your DB stores this as a varchar, so we treat it as a String!
+    // 
     @Column(name = "created_at")
     private String createdAt;
 

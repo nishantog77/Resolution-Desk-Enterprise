@@ -24,7 +24,7 @@ public class CaseController {
         this.aiGatewayService = aiGatewayService;
     }
 
-    // Day 12 - Filter cases by category or status (Now pulling from Cloud DB!)
+    // 
     @GetMapping
     public ResponseEntity<?> getAllCases(
             @RequestParam(required = false) String category,
@@ -62,12 +62,12 @@ public class CaseController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // FIX 1: Generates the exact 5-digit padded case ID matching your Supabase history (CASE-2024-XXXXX)
+    // 
     @PostMapping
     public ResponseEntity<Case> createCase(@RequestBody Case newCase) {
         long totalCases = caseRepository.count();
 
-        // Generates the perfectly padded sequential sequence: CASE-2024-00349
+        // Generates the perfectly padded sequential sequence
         String sequentialId = String.format("CASE-2024-%05d", totalCases + 1);
 
         newCase.setId(sequentialId);
@@ -80,7 +80,7 @@ public class CaseController {
         return ResponseEntity.ok(savedCase);
     }
 
-    // FIX 2: Bulletproof Patch Endpoint (Updates status AND resolution notes dynamically)
+    // 
     @PatchMapping("/{id}")
     public ResponseEntity<Case> updateCase(@PathVariable String id, @RequestBody Case updates) {
         return caseRepository.findById(id)
@@ -93,7 +93,7 @@ public class CaseController {
                     // Update resolution notes if provided
                     if (updates.getResolutionNotes() != null && !updates.getResolutionNotes().isEmpty()) {
                         existingCase.setResolutionNotes(updates.getResolutionNotes());
-                        // Fail-safe: If notes are saved, force the state to RESOLVED so it vanishes from Open queue
+                        // 
                         existingCase.setStatus("RESOLVED");
                     }
 
@@ -103,14 +103,14 @@ public class CaseController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // FIX 3: Fail-safe Notes Endpoint (Forces the status to RESOLVED when notes are written)
+    // 
     @PutMapping("/{id}/notes")
     public ResponseEntity<Case> updateNotes(@PathVariable String id, @RequestBody String updatedNotes) {
         return caseRepository.findById(id)
                 .map(existingCase -> {
                     existingCase.setResolutionNotes(updatedNotes);
 
-                    // Force state transition to RESOLVED to guarantee filtering synchronization
+                    //
                     existingCase.setStatus("RESOLVED");
 
                     Case savedCase = caseRepository.save(existingCase);

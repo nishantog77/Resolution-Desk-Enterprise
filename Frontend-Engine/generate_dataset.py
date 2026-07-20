@@ -97,20 +97,20 @@ def generate_batch(batch_num, current_id):
             
     return []
 
-print(f"⚙️ Target: {TOTAL_CASES} Telecom cases. Starting generation...")
+print(f" Target: {TOTAL_CASES} Telecom cases. Starting generation...")
 
 # Generation Loop
 for i in range(1, TOTAL_BATCHES + 1):
-    print(f"🔄 Processing Batch {i}/{TOTAL_BATCHES}...")
+    print(f" Processing Batch {i}/{TOTAL_BATCHES}...")
     
     batch_cases = generate_batch(i, global_id_counter)
     
     if batch_cases:
         all_cases.extend(batch_cases)
         global_id_counter += len(batch_cases)
-        print(f"✅ Saved {len(batch_cases)} cases. Total: {len(all_cases)}/{TOTAL_CASES}")
+        print(f"Saved {len(batch_cases)} cases. Total: {len(all_cases)}/{TOTAL_CASES}")
     else:
-        print("⏭️ Skipping batch due to errors.")
+        print(" Skipping batch due to errors.")
         
     time.sleep(0.5)
 
@@ -118,5 +118,5 @@ for i in range(1, TOTAL_BATCHES + 1):
 with open(JSON_FILE, 'w') as f:
     json.dump(all_cases, f, indent=4)
 
-print(f"\n🎉 BOOM. Successfully generated {len(all_cases)} cases and saved to {JSON_FILE}!")
-print("PRO TIP: Open the file in VS Code and verify there are no red squiggly lines.")
+print(f"\nSuccessfully generated {len(all_cases)} cases and saved to {JSON_FILE}!")
+print("Open the file in VS Code and verify there are no red squiggly lines.")

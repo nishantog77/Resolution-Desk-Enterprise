@@ -56,13 +56,13 @@ public class AnalyticsController {
         }).collect(Collectors.toList());
     }
 
-    // 3. Devices endpoint - NOW LIMITED TO TOP 5 REAL DEVICES
+    // 3. Devices endpoint 
     @GetMapping("/devices")
     public List<Map<String, Object>> getDeviceAnalytics() {
         List<Case> allCases = caseRepository.findAll();
 
         Map<String, Long> deviceCounts = allCases.stream()
-                // THE FIX: Completely ignores null AND blank/empty device names!
+                // 
                 .filter(c -> c.getDevice() != null && !c.getDevice().trim().isEmpty())
                 .collect(Collectors.groupingBy(Case::getDevice, Collectors.counting()));
 
